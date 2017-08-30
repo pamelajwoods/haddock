@@ -1,1 +1,3 @@
 # haddock
+
+Really cool project
