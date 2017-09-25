@@ -5,7 +5,7 @@ library(broom)
 library(infuser)
 bootstrap <- FALSE
 ## Create a gadget directory, define some defaults to use with our queries below
-gd <- gadget_directory("02-haddock/01-firsttry")
+gd <- gadget_directory("01-firsttry")
 mdb<-mfdb('Iceland')#,db_params=list(host='hafgeimur.hafro.is'))
 
 year_range <- 1979:2016
@@ -37,37 +37,79 @@ gadgetfile('Modelfiles/time',
                                   notimesteps=c(4,3,3,3,3)))) %>% 
   write.gadget.file(gd$dir)
 
+
+# example
+# timedat<-data_frame(year = rep(year_range, each=4), 
+#                     step = rep(1:4, length(year_range)), 
+#                     value = parse(text=sprintf('0.001*had.k.%s',yr_tmp)) %>%
+#                       map(to.gadget.formulae)%>% 
+#                       unlist())
+
+
+gadgetfile('Modelfiles/timevariableK.mat',
+           file_type = 'timevariable',
+           components = list(list('annualgrowth',
+                                  data= data_frame(year = rep(year_range, each=4), 
+                                                       step = rep(1:4, length(year_range)), 
+                                                       value = parse(text=sprintf('0.001*hadmat.k.%s',rep(c(1,2,3,4), length(year_range)))) %>%
+                                                         map(to.gadget.formulae)%>% 
+                                                         unlist()))
+                                  )) %>% 
+  write.gadget.file(gd$dir)
+
+gadgetfile('Modelfiles/timevariableK.imm',
+           file_type = 'timevariable',
+           components = list(list('annualgrowth',
+                                  data= data_frame(year = rep(year_range, each=4), 
+                                                   step = rep(1:4, length(year_range)), 
+                                                   value = parse(text=sprintf('0.001*hadimm.k.%s',rep(c(1,2,3,4), length(year_range)))) %>%
+                                                     map(to.gadget.formulae)%>% 
+                                                     unlist()))
+           )) %>% 
+  write.gadget.file(gd$dir)
+
+gadgetfile('Modelfiles/timevariableLinf',
+           file_type = 'timevariable',
+           components = list(list('annualgrowth',
+                                  data= data_frame(year = rep(year_range, each=4), 
+                                                   step = rep(1:4, length(year_range)), 
+                                                   value = parse(text=sprintf('had.Linf.%s',rep(c(41,23,23,41), length(year_range)))) %>%
+                                                     map(to.gadget.formulae)%>% 
+                                                     unlist()))
+           )) %>% 
+  write.gadget.file(gd$dir)
+
 ## Write out areafile and update mainfile with areafile location
 gadget_areafile(
   size = mfdb_area_size(mdb, defaults)[[1]],
   temperature = mfdb_temperature(mdb, defaults)[[1]]) %>% 
 gadget_dir_write(gd,.)
 
-source('R/utils.R')
-source('06-ling/00-setup/setup-fleets.R')
-source('06-ling/00-setup/setup-model.R')
-source('06-ling/00-setup/setup-catchdistribution.R')
-source('06-ling/00-setup/setup-indices.R')
-source('06-ling/00-setup/setup-likelihood.R')
+source('../R/utils.R')
+source('00-setup/setup-fleets.R')
+source('00-setup/setup-model.R')
+source('00-setup/setup-catchdistribution.R')
+source('00-setup/setup-indices.R')
+source('00-setup/setup-likelihood.R')
 
 Sys.setenv(GADGET_WORKING_DIR=normalizePath(gd$dir))
 callGadget(l=1,i='params.in',p='params.init')
 
 if(FALSE){
-  source('06-ling/00-setup/setup-fixed_slope.R')
+  source('00-setup/setup-fixed_slope.R')
   ## setting up model variants
-  source('06-ling/00-setup/setup-est_slope.R')
-  #source('06-ling/00-setup/setup-three_fleets.R')
-  source('06-ling/00-setup/setup-single_fleet.R')
+  source('00-setup/setup-est_slope.R')
+  #source('00-setup/setup-three_fleets.R')
+  source('00-setup/setup-single_fleet.R')
 }
 
 
 if(bootstrap){
-  source('06-ling/00-setup/setup-bootstrap.R')
-  file.copy(sprintf('%s/bootrun.R','06-ling/00-setup'),gd$dir)
+  source('00-setup/setup-bootstrap.R')
+  file.copy(sprintf('%s/bootrun.R','00-setup'),gd$dir)
 }
 
-file.copy(sprintf('%s/itterfitter.sh','06-ling/00-setup'),gd$dir)
-file.copy(sprintf('%s/run.R','06-ling/00-setup'),gd$dir)
-file.copy(sprintf('%s/optinfofile','06-ling/00-setup'),gd$dir)
-file.copy(sprintf('%s/run-fixed_slope.R','06-ling/00-setup'),gd$dir)
+file.copy(sprintf('%s/itterfitter.sh','00-setup'),gd$dir)
+file.copy(sprintf('%s/run.R','/00-setup'),gd$dir)
+file.copy(sprintf('%s/optinfofile','00-setup'),gd$dir)
+#file.copy(sprintf('%s/run-fixed_slope.R','00-setup'),gd$dir)
