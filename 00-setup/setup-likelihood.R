@@ -6,13 +6,13 @@ aldist.igfs[[1]]$step <- 2
 ldist.igfs[[1]]$step <- 2
 matp.igfs[[1]]$step <- 2
 
-aut.SI1[[1]]$step <- 3
-aut.SI2[[1]]$step <- 3
-aut.SI3[[1]]$step <- 3
-aut.SI4[[1]]$step <- 3
-aut.SI5[[1]]$step <- 3
-aut.SI6[[1]]$step <- 3
-aut.SI7[[1]]$step <- 3
+aut.SI1[[1]]$step <- 5
+aut.SI2[[1]]$step <- 5
+aut.SI3[[1]]$step <- 5
+aut.SI4[[1]]$step <- 5
+aut.SI5[[1]]$step <- 5
+aut.SI6[[1]]$step <- 5
+aut.SI7[[1]]$step <- 5
 
 gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>% 
   ## Write a penalty component to the likelihood file
@@ -166,15 +166,15 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.i.45_55",
                 weight = 1,
                 data = igfs.SI6[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.i.55_97",
                 weight = 1,
                 data = igfs.SI7[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
  
   gadget_update("surveyindices",
@@ -214,15 +214,15 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.a.45_55",
                 weight = 1,
                 data = aut.SI6[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.a.55_97",
                 weight = 1,
                 data = aut.SI7[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   
   write.gadget.file(gd$dir)

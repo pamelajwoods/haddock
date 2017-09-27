@@ -140,13 +140,14 @@ testage0.aut<-
   dplyr::summarise(n=n(), ml=mean(length,na.rm=TRUE))
 
 
-## initial conditions sigma
+## mean lengths by timestep and age
 ml.step <- 
   mfdb_dplyr_sample(mdb) %>% 
   dplyr::filter(species == defaults$species,age >= 0,!is.na(length)) %>% 
   dplyr::select(age,length,month) %>% 
   dplyr::collect(n=Inf) %>% 
-  dplyr::mutate(step=ifelse(month<4, 1, ifelse(month>3 & month <7, 2, ifelse(month>6 & month<10, 3, 4)))) %>% 
+  #dplyr::mutate(step=ifelse(month<4, 1, ifelse(month>3 & month <7, 2, ifelse(month>6 & month<10, 3, 4)))) %>% 
+  dplyr::mutate(step=ifelse(month<3, 1, ifelse(month>2 & month <5, 2, ifelse(month>4 & month<7, 3, ifelse(month>6 & month<9, 4, ifelse(month>8 & month<11, 5, 6)))))) %>% 
   dplyr::group_by(age, step) %>% 
   dplyr::summarise(ml=mean(length,na.rm=TRUE))%>%
   dplyr::ungroup() %>%

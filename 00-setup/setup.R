@@ -21,9 +21,14 @@ reitmapping <-
         header=TRUE,
         as.is=TRUE)
 
+mfdb_timestep_by6<-mfdb_timestep_quarterly
+mfdb_timestep_by6$'1'<-c(1,2); mfdb_timestep_by6$'2'<-c(3,4); mfdb_timestep_by6$'3'<-c(5,6); 
+mfdb_timestep_by6$'4'<-c(7,8); mfdb_timestep_by6$'5'<-c(9,10); mfdb_timestep_by6$'6'<-c(11,12)
+#maybe table name needs to be changed
+
 defaults <- list(
     area = mfdb_group("1" = unique(reitmapping$SUBDIVISION)),
-    timestep = mfdb_timestep_quarterly,
+    timestep = mfdb_timestep_by6,
     year = year_range,
     species = 'HAD')
 
@@ -33,8 +38,8 @@ gadgetfile('Modelfiles/time',
            components = list(list(firstyear = min(defaults$year),
                                   firststep=1,
                                   lastyear=max(defaults$year),
-                                  laststep=4,
-                                  notimesteps=c(4,3,3,3,3)))) %>% 
+                                  laststep=6,
+                                  notimesteps=c(6,2,2,2,2,2,2)))) %>% 
   write.gadget.file(gd$dir)
 
 
@@ -49,9 +54,12 @@ gadgetfile('Modelfiles/time',
 gadgetfile('Modelfiles/timevariableK.mat',
            file_type = 'timevariable',
            components = list(list('annualgrowth',
-                                  data= data_frame(year = rep(year_range, each=4), 
-                                                       step = rep(1:4, length(year_range)), 
-                                                       value = parse(text=sprintf('0.001*hadmat.k.%s',rep(c(1,2,3,4), length(year_range)))) %>%
+                                  data= data_frame(year = rep(year_range, each=6), 
+                                                       step = rep(1:6, length(year_range)), 
+                                                       value = parse(text=sprintf(rep(c(rep('0.001*hadmat.k.%s',2), 
+                                                                                        rep('0.001*hadimm.k.%s',4)), 
+                                                                                      length(year_range)),rep(c(1,2,3,4,5,6), 
+                                                                                                             length(year_range)))) %>%
                                                          map(to.gadget.formulae)%>% 
                                                          unlist()))
                                   )) %>% 
@@ -60,9 +68,9 @@ gadgetfile('Modelfiles/timevariableK.mat',
 gadgetfile('Modelfiles/timevariableK.imm',
            file_type = 'timevariable',
            components = list(list('annualgrowth',
-                                  data= data_frame(year = rep(year_range, each=4), 
-                                                   step = rep(1:4, length(year_range)), 
-                                                   value = parse(text=sprintf('0.001*hadimm.k.%s',rep(c(1,2,3,4), length(year_range)))) %>%
+                                  data= data_frame(year = rep(year_range, each=6), 
+                                                   step = rep(1:6, length(year_range)), 
+                                                   value = parse(text=sprintf('0.001*hadimm.k.%s',rep(c(1,2,3,4,5,6), length(year_range)))) %>%
                                                      map(to.gadget.formulae)%>% 
                                                      unlist()))
            )) %>% 

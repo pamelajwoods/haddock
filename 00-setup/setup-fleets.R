@@ -45,7 +45,7 @@ igfs.landings <-
 
 
 aut.landings <- 
-  structure(data.frame(year=defaults$year,step=4,area=1,number=1),
+  structure(data.frame(year=defaults$year,step=5,area=1,number=1),
             area_group = mfdb_group(`1` = 1)) #shows 1 kg being taken
 
 

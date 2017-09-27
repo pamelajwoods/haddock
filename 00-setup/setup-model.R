@@ -84,10 +84,10 @@ had.imm <-
                 coefficients = '( * 0.001 #had.mat1) #had.mat2 0 0') %>% 
   gadget_update('doesmove',
                 transitionstocksandratios = 'hadmat 1',
-                transitionstep = 4) %>% 
+                transitionstep = 6) %>% 
   gadget_update('doesrenew',
                 normalparam = data_frame(year = year_range,
-                                         step = 2, #changed this so new recruits should not be detected in spring survey
+                                         step = 3, #changed this so new recruits should not be detected in spring survey
                                          area = 1,
                                          age = .[[1]]$minage,
                                          number = parse(text=sprintf('had.rec.scalar*exp(had.rec.%s)',year)) %>% 
@@ -167,7 +167,7 @@ read.gadget.parameters(sprintf('%s/params.out',gd$dir)) %>%
   init_guess('M$',0.15,0.001,1,0) %>% 
   init_guess('M0',0.35,0.001,1,0) %>% 
   init_guess('rec.scalar',1,1,500,1) %>% 
-  init_guess('init.scalar',1,1,300,1) %>% 
+  init_guess('init.scalar',1,0.1,300,1) %>% 
   init_guess('mat2',mat.l50$l50,0.75*mat.l50$l50,1.25*mat.l50$l50,1) %>% 
   init_guess('mat1',35,  10, 200, 1) %>% 
   init_guess('init.F',0.4,0.1,1.5,1) %>% 
