@@ -143,7 +143,8 @@ testage0.aut<-
 ## mean lengths by timestep and age
 ml.step <- 
   mfdb_dplyr_sample(mdb) %>% 
-  dplyr::filter(species == defaults$species,age >= 0,!is.na(length)) %>% 
+  dplyr::filter(species == defaults$species,age >= 0,!is.na(length),
+                gear == 'BMT',sampling_type == 'SEA') %>% 
   dplyr::select(age,length,month) %>% 
   dplyr::collect(n=Inf) %>% 
   #dplyr::mutate(step=ifelse(month<4, 1, ifelse(month>3 & month <7, 2, ifelse(month>6 & month<10, 3, 4)))) %>% 

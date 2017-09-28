@@ -164,16 +164,16 @@ read.gadget.parameters(sprintf('%s/params.out',gd$dir)) %>%
   init_guess('l50',45,10,100,1) %>% 
   init_guess('walpha',lw.constants$estimate[1], 1e-10, 1,0) %>% 
   init_guess('wbeta',lw.constants$estimate[2], 2, 4,0) %>% 
-  init_guess('M$',0.15,0.001,1,0) %>% 
+  init_guess('M$',0.2,0.001,1,0) %>% 
   init_guess('M0',0.35,0.001,1,0) %>% 
   init_guess('rec.scalar',1,1,500,1) %>% 
   init_guess('init.scalar',1,0.1,300,1) %>% 
   init_guess('mat2',mat.l50$l50,0.75*mat.l50$l50,1.25*mat.l50$l50,1) %>% 
   init_guess('mat1',35,  10, 200, 1) %>% 
-  init_guess('init.F',0.4,0.1,1.5,1) %>% 
+  init_guess('init.F',0.5,0.1,1.5,1) %>% 
   init_guess('p0',0,0,1,1) %>% 
   init_guess('p2',1,0,1,1) %>% 
   init_guess('p3',1,0.01,100,1) %>% 
   init_guess('p4',1,0.01,100,1) %>% 
-  init_guess('mode',70,30,90,1) %>% 
+  init_guess('mode',45,20,70,1) %>% 
   write.gadget.parameters(.,file=sprintf('%s/params.in',gd$dir))
