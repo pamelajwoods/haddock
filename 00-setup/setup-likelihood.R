@@ -159,8 +159,8 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.i.36_45",
                 weight = 1,
                 data = igfs.SI5[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.i.45_55",
@@ -207,8 +207,8 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.a.36_45",
                 weight = 1,
                 data = aut.SI5[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.a.45_55",

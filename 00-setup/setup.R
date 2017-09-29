@@ -56,9 +56,9 @@ gadgetfile('Modelfiles/timevariableK.mat',
            components = list(list('annualgrowth',
                                   data= data_frame(year = rep(year_range, each=6), 
                                                        step = rep(1:6, length(year_range)), 
-                                                       value = parse(text=sprintf(rep(c(rep('0.001*hadmat.k.%s',2), 
-                                                                                        rep('0.001*hadimm.k.%s',4)), 
-                                                                                      length(year_range)),rep(c(1,2,3,4,5,6), 
+                                                       value = parse(text=sprintf(rep(c(rep('0.001*hadmat.k.%s',3), 
+                                                                                        rep('0.001*hadimm.k.%s',3)), 
+                                                                                      length(year_range)),rep(c(12,12,3,4,5,6), 
                                                                                                              length(year_range)))) %>%
                                                          map(to.gadget.formulae)%>% 
                                                          unlist()))

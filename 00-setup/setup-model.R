@@ -108,14 +108,14 @@ had.mat <-
   gadgetstock('hadmat',gd$dir,missingOkay = TRUE) %>%
   gadget_update('stock',
                 minage = 1,
-                maxage = 10,
+                maxage = 15,
                 minlength = 1,
                 maxlength = 100,
                 dl = 1,
                 livesonareas = 1) %>%
   gadget_update('doesgrow', ## note to self the order of these parameters make difference
                 growthparameters=c(linf='#had.Linf', 
-                                   k='Modelfiles/timevariableK.imm',
+                                   k='Modelfiles/timevariableK.mat',
                                    alpha = '#hadmat.walpha',
                                    beta = '#hadmat.wbeta'),
                 beta = to.gadget.formulae(quote(10*hadmat.bbin)),
@@ -148,6 +148,7 @@ had.mat %>%
 
 
 
+
 Sys.setenv(GADGET_WORKING_DIR=normalizePath(gd$dir))
 callGadget(s=1,log = 'init.log') #ignore.stderr = FALSE,
 
@@ -155,7 +156,7 @@ callGadget(s=1,log = 'init.log') #ignore.stderr = FALSE,
 read.gadget.parameters(sprintf('%s/params.out',gd$dir)) %>% 
   init_guess('rec.[0-9]',2,0,7,1) %>%
   init_guess('init.[0-9]',1,0.001,1000,1) %>%
-  init_guess('recl',5,3,7.5,1) %>% 
+  init_guess('recl',5,3,7,1) %>% 
   init_guess('rec.sd',2,0.1,3,1) %>% 
   init_guess('Linf',75, 65, 500,1) %>% 
   init_guess('k.[0-9]',100, 1, 500,1) %>% 
@@ -166,11 +167,15 @@ read.gadget.parameters(sprintf('%s/params.out',gd$dir)) %>%
   init_guess('wbeta',lw.constants$estimate[2], 2, 4,0) %>% 
   init_guess('M$',0.2,0.001,1,0) %>% 
   init_guess('M0',0.35,0.001,1,0) %>% 
+  init_guess('M12',0.3,0.001,1,0) %>% 
+  init_guess('M13',0.4,0.001,1,0) %>% 
+  init_guess('M14',0.5,0.001,1,0) %>% 
+  init_guess('M15',0.6,0.001,1,0) %>% 
   init_guess('rec.scalar',1,1,500,1) %>% 
   init_guess('init.scalar',1,0.1,300,1) %>% 
   init_guess('mat2',mat.l50$l50,0.75*mat.l50$l50,1.25*mat.l50$l50,1) %>% 
   init_guess('mat1',35,  10, 200, 1) %>% 
-  init_guess('init.F',0.5,0.1,1.5,1) %>% 
+  init_guess('init.F',0.4,0.1,1.5,1) %>% 
   init_guess('p0',0,0,1,1) %>% 
   init_guess('p2',1,0,1,1) %>% 
   init_guess('p3',1,0.01,100,1) %>% 
