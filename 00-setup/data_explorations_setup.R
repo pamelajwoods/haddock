@@ -1,11 +1,140 @@
 
+#comparing catch distributions
+
+
+bins<-seq(1,100,1)
+minage <- had.imm[[1]]$minage
+maxage <- had.mat[[1]]$maxage
+maxlength <- had.mat[[1]]$maxlength 
+minlength <- had.imm[[1]]$minlength
+dl <- had.imm[[1]]$dl
+
+
+aldist.all <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length','gear'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear = c('LLN','HLN','BMT','GIL','DSE','PSE','DRD','NPT','SHT','PGT'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper"))#,
+                           #length = mfdb_interval("len", 
+                            #                      seq(minlength, maxlength, by = dl),
+                             #                     open_ended = c("upper","lower"))
+                                                  ),
+                      defaults))[[1]] %>%
+  group_by(year, gear, age) %>% 
+  summarise(n_sum = sum(number)) %>%
+  mutate(p = n_sum/sum(n_sum),
+         age = as.numeric(gsub('age', '', age)))
+ 
+
+  ## weight length relationship
+  lw.key <- 
+    mfdb_dplyr_sample(mdb) %>% 
+    filter(species == defaults$species,
+           #sampling_type == 'IGFS',
+           !is.na(weight), 
+           length >= 10,
+           weight >= 8,
+           year>1978) %>% 
+    #distinct(sampling_type)
+    select(length,weight,age,year,gear,count) %>% 
+    collect(n=Inf) %>% 
+    group_by(year, age) %>%
+    summarise(length_m = weighted.mean(length, w=count), weight_m=weighted.mean(weight, w=count), n = sum(count))
+  unique(lw.key$year)
+
+
+View(aldist.all)
+alw.all<-
+  full_join(aldist.all, lw.key)
+View(alw.all)
+
+igfs_cdat<-mfdb_sample_count(mdb, 
+                             c('length'), 
+                             c(list(
+                               data_source = 'iceland-aldist',
+                               sampling_type = 'IGFS',
+                               length = mfdb_interval("len", bins)),
+                               defaults))[[1]]#[0,]
+View(igfs_cdat)
+
+
+
 #determining how to structure fleets
 
+old.landings <-
+  mfdb_sample_totalweight(mdb, NULL,
+                          c(list(
+                            data_source = c('old.landings'),
+                            species = defaults$species),
+                            defaults))[[1]] %>%
+mutate(gear = 'BMT')
+
 all.landings <- collect(mfdb_sample_totalweight(mdb, c('gear'), c(list(
-gear = as.character(mfdb::gear$name),
+gear = c('LLN','HLN','BMT','GIL','DSE','PSE','DRD','NPT','SHT','PGT'),#as.character(mfdb::gear$name),
 sampling_type = 'LND',
 species = defaults$species),
-defaults))[[1]])
+defaults))[[1]]) %>%
+  full_join(old.landings) %>%
+  group_by(year, gear) %>%
+  summarise(total_weight = sum(total_weight))
+View(all.landings)
+
+
+aldist.all %>%
+  filter(year==1979) %>%
+  group_by(year, age) %>%
+  summarise(n_sum=sum(n_sum))  %>%
+  mutate(p = n_sum/sum(n_sum),
+         gear = 'BMT')-> aldist.1979
+
+
+aldist.all %>%
+  filter(year==1980) %>%
+  group_by(year, age) %>%
+  summarise(n_sum=sum(n_sum))  %>%
+  mutate(p = n_sum/sum(n_sum),
+         gear = 'BMT')-> aldist.1980
+
+aldist.all %>%
+  filter(year==1981) %>%
+  group_by(year, age) %>%
+  summarise(n_sum=sum(n_sum)) %>%
+  mutate(p = n_sum/sum(n_sum),
+         gear = 'BMT')-> aldist.1981 
+
+
+
+usekey<-function(year1, gear1, lw.key, all.landings, aldist.all){
+  w_m<-lw.key[lw.key$year == ifelse(year1<1993, 1993,year1),]
+  w_t<-all.landings[all.landings$year==year1 & all.landings$gear==gear1,]
+  pp<-aldist.all[aldist.all$year==year1 & aldist.all$gear==gear1,]
+  dat1<-left_join(pp,w_m, by = c('age')) %>%
+    mutate(wtbyage=p*weight_m)
+  NN<-w_t$total_weight/sum(dat1$wtbyage, na.rm=T)
+  dat<-mutate(dat1[order(dat1$age),], Nbyage = NN*p)
+  return(dat)
+}
+
+dat<-usekey(1979, 'BMT', lw.key, all.landings, aldist.all)
+dat[,c(1,2,3,4,5,11)]
+dat<-usekey(1979, 'BMT', lw.key, all.landings, aldist.1979)
+dat[,c(1,2,3,4,5,11)]
+
+dat<-usekey(1980, 'BMT', lw.key, all.landings, aldist.all)
+dat[,c(1,2,3,4,5,11)]
+dat<-usekey(1980, 'BMT', lw.key, all.landings, aldist.1980)
+dat[,c(1,2,3,4,5,11)]
+
+
+dat<-usekey(1981, 'BMT', lw.key, all.landings, aldist.all)
+dat[,c(1,2,3,4,5,11)]
+dat<-usekey(1981, 'BMT', lw.key, all.landings, aldist.1981)
+dat[,c(1,2,3,4,5,11)]
+
+  
 View(mfdb::gear)
 gear_summary<-aggregate(all.landings$total_weight, by = list(all.landings$gear), sum)
 sum(gear_summary[11:12,2])/sum(gear_summary[,2])
@@ -156,3 +285,350 @@ ml.step <-
 
 View(ml.step)
 
+mfdb_dplyr_sample(mdb) %>% 
+  filter(species == defaults$species,
+         sampling_type == 'IGFS',
+         !is.na(maturity_stage)) %>% 
+  select(length,maturity_stage) %>% 
+  group_by(length,maturity_stage) %>% 
+  dplyr::summarise(n=n()) %>% 
+  group_by(length) %>% 
+  dplyr::mutate(p=n/sum(n)) %>% 
+  ungroup() %>%
+  filter(maturity_stage=='2',p>0.50,length>10)-> mtest
+
+View(mtest)
+
+mfdb_dplyr_sample(mdb) %>% 
+  filter(species == defaults$species,
+         sampling_type == 'AUT',
+         !is.na(maturity_stage)) %>% 
+  select(length,maturity_stage) %>% 
+  group_by(length,maturity_stage) %>% 
+  dplyr::summarise(n=n()) %>% 
+  group_by(length) %>% 
+  dplyr::mutate(p=n/sum(n)) %>% 
+  ungroup() %>%
+  filter(maturity_stage=='2',p>0.50,length>10)-> mtest
+
+View(mtest)
+
+bmt.landings <- mfdb_sample_totalweight(mdb, NULL, c(list(
+  gear=c('BMT','DRD','NPT','SHT','PGT'),
+  sampling_type = 'LND',
+  species = defaults$species),
+  defaults))
+
+
+
+
+
+minage <- had.imm[[1]]$minage
+maxage <- had.mat[[1]]$maxage
+maxlength <- had.mat[[1]]$maxlength 
+minlength <- had.imm[[1]]$minlength
+dl <- had.imm[[1]]$dl
+
+aldist.bmt <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('BMT'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+
+aldist.lln <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('LLN'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+
+aldist.hln <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('HLN'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+
+aldist.drd <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('DRD'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+
+aldist.npt <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('NPT'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+aldist.sht <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('SHT'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+aldist.pgt <-
+  mfdb_sample_count(mdb, 
+                    c('age', 'length'),
+                    c(list(sampling_type = 'SEA',
+                           data_source = 'iceland-aldist',
+                           gear=c('PGT'),
+                           age = mfdb_step_interval('age',by=1,from=minage,to=maxage,
+                                                    open_ended = c("upper")),
+                           length = mfdb_interval("len", 
+                                                  seq(minlength, maxlength, by = dl),
+                                                  open_ended = c("upper","lower"))),
+                      defaults))
+
+## Query length data to create SEA bmt catchdistribution components
+ldist.bmt <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('BMT'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+
+## Query length data to create SEA bmt catchdistribution components
+ldist.lln <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('LLN'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+## Query length data to create SEA bmt catchdistribution components
+ldist.hln <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('HLN'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+
+
+## Query length data to create SEA bmt catchdistribution components
+ldist.drd <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('DRD'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+## Query length data to create SEA bmt catchdistribution components
+ldist.npt <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('NPT'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+## Query length data to create SEA bmt catchdistribution components
+ldist.sht <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('SHT'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+## Query length data to create SEA bmt catchdistribution components
+ldist.pgt <- 
+  mfdb_sample_count(mdb,
+                    c('age', 'length'), 
+                    c(list(
+                      sampling_type = 'SEA',
+                      data_source = 'iceland-ldist',
+                      gear=c('PGT'),
+                      age = mfdb_interval("all",c(minage,maxage),
+                                          open_ended = c("upper","lower")),
+                      length = mfdb_interval("len", 
+                                             seq(minlength, maxlength, by = dl),
+                                             open_ended = c("upper","lower"))),
+                      defaults))
+
+ldist.bmt.all<-full_join(mutate(as.tibble(ldist.bmt[[1]]), gear = 'BMT'), full_join(mutate(as.tibble(ldist.drd[[1]]), gear = 'DRD'), full_join(mutate(as.tibble(ldist.npt[[1]]), gear = 'NPT'), full_join(mutate(as.tibble(ldist.pgt[[1]]), gear = 'PGT'), mutate(as.tibble(ldist.sht[[1]]), gear = 'SHT')))))
+View(ldist.bmt.all)
+ldist.lln.all<-full_join(mutate(as.tibble(ldist.lln[[1]]), gear = 'LLN'),mutate(as.tibble(ldist.hln[[1]]), gear = 'HLN'))
+View(ldist.lln.all)
+
+ldist.bmt.all %>%
+  #filter(year < 1995) %>%
+  group_by(gear, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% ggplot(aes(length, number/1e3, colour = gear)) + geom_line() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+  
+ldist.lln.all %>%
+  #filter(year < 1995) %>%
+  group_by(gear, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% ggplot(aes(length, number/1e3, colour = gear)) + geom_line() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+aldist.bmt.all<-full_join(mutate(as.tibble(aldist.bmt[[1]]), gear = 'BMT'), full_join(mutate(as.tibble(aldist.drd[[1]]), gear = 'DRD'), full_join(mutate(as.tibble(aldist.npt[[1]]), gear = 'NPT'), full_join(mutate(as.tibble(aldist.pgt[[1]]), gear = 'PGT'), mutate(as.tibble(aldist.sht[[1]]), gear = 'SHT')))))
+View(aldist.bmt.all)
+aldist.lln.all<-full_join(mutate(as.tibble(aldist.lln[[1]]), gear = 'LLN'), mutate(as.tibble(aldist.hln[[1]]), gear = 'HLN'))
+View(aldist.bmt.all)
+
+aldist.bmt.all %>%
+  #filter(year < 1995) %>%
+  group_by(gear, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% 
+  ggplot(aes(length, number/1e3, colour = gear)) + geom_line() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+aldist.lln.all %>%
+  #filter(year < 1995) %>%
+  group_by(gear, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% 
+  ggplot(aes(length, number/1e3, colour = gear)) + geom_line() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+aldist.bmt.all %>%
+  #filter(year < 1995) %>%
+  group_by(gear, year, age) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  mutate(age = gsub('age','',age) %>% as.numeric()) %>% 
+  ggplot(aes(age, number/1e3, colour = gear)) + geom_line() + scale_x_continuous(limits = c(0, 13)) +
+  facet_wrap(~year,scale='free_y')
+
+
+laldist.bmt<-full_join(mutate(as.tibble(aldist.bmt[[1]]), source = 'aldist', scale = 10), mutate(as.tibble(ldist.bmt[[1]]), source = 'ldist', scale = 1))
+laldist.bmt %>%
+  group_by(source, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  group_by(source, year) %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% 
+  #filter(year < 1995) %>%
+  mutate(maxval = max(number)) %>% 
+  ggplot(aes(length, (number/maxval), colour = source)) + geom_smooth() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+laldist.igfs<-full_join(mutate(as.tibble(aldist.igfs[[1]]), source = 'aldist', scale = 10), mutate(as.tibble(ldist.igfs[[1]]), source = 'ldist', scale = 1))
+laldist.igfs %>%
+  group_by(source, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  group_by(source, year) %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% 
+  #filter(year < 1995) %>%
+  mutate(maxval = max(number)) %>% 
+  ggplot(aes(length, (number/maxval), colour = source)) + geom_smooth() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+laldist.lln<-full_join(mutate(as.tibble(aldist.lln[[1]]), source = 'aldist', scale = 10), mutate(as.tibble(ldist.lln[[1]]), source = 'ldist', scale = 1))
+laldist.lln %>%
+  group_by(source, year, length) %>%
+  summarize(number = sum(number)) %>%
+  ungroup() %>%
+  group_by(source, year) %>%
+  mutate(length = gsub('len','',length) %>% as.numeric()) %>% 
+  #filter(year < 1995) %>%
+  mutate(maxval = max(number)) %>% 
+  ggplot(aes(length, (number/maxval), colour = source)) + geom_smooth() + scale_x_continuous(limits = c(0, 100)) +
+  facet_wrap(~year,scale='free_y')
+
+
+
+full_join(full_join(as.tibble(bmt.landings[[1]]),as.tibble(old.landings[[1]])), as.tibble(foreign.landings[[1]])) %>% 
+  group_by(year) %>%
+  summarise(over_yr = sum(total_weight)) %>%
+  plot(over_yr~year)
+
+full_join(full_join(as.tibble(lln.landings[[1]]),as.tibble(gil.landings[[1]])), as.tibble(dse.landings[[1]])) %>% 
+  group_by(year) %>%
+  summarise(over_yr=sum(total_weight)) %>% View()
+  plot(over_yr~year)
+  
+as_tibble(aldist.bmt[[1]])%>%
+    group_by(year) %>%
+    mutate(age = gsub('age','',age) %>% as.numeric()) %>% 
+    summarise(maxage=max(age)) %>%
+    plot(maxage~year)
+as_tibble(aldist.gil[[1]])%>%
+  group_by(year) %>%
+  mutate(age = gsub('age','',age) %>% as.numeric()) %>% 
+  summarise(maxage=max(age)) %>%
+  plot(maxage~year)

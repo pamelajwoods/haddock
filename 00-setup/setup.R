@@ -1,9 +1,12 @@
+#install.packages("devtools")
+#devtools::install_github("hafro/rgadget")
 library(mfdb)
 library(tidyverse)
 library(Rgadget)
 library(broom)
 library(infuser)
 bootstrap <- FALSE
+
 ## Create a gadget directory, define some defaults to use with our queries below
 gd <- gadget_directory("01-firsttry")
 mdb<-mfdb('Iceland')#,db_params=list(host='hafgeimur.hafro.is'))
@@ -32,6 +35,19 @@ defaults <- list(
     year = year_range,
     species = 'HAD')
 
+early<-c(1:7)
+
+defaults_early <- list(
+  area = mfdb_group("1" = unique(reitmapping$SUBDIVISION)),
+  timestep = mfdb_timestep_by6,
+  year = year_range[early],
+  species = 'HAD')
+
+defaults_late <- list(
+  area = mfdb_group("1" = unique(reitmapping$SUBDIVISION)),
+  timestep = mfdb_timestep_by6,
+  year = year_range[-early],
+  species = 'HAD')
 
 gadgetfile('Modelfiles/time',
            file_type = 'time',
@@ -42,50 +58,8 @@ gadgetfile('Modelfiles/time',
                                   notimesteps=c(6,2,2,2,2,2,2)))) %>% 
   write.gadget.file(gd$dir)
 
+source('00-setup/setup-timevariablefiles.R')
 
-# example
-# timedat<-data_frame(year = rep(year_range, each=4), 
-#                     step = rep(1:4, length(year_range)), 
-#                     value = parse(text=sprintf('0.001*had.k.%s',yr_tmp)) %>%
-#                       map(to.gadget.formulae)%>% 
-#                       unlist())
-
-
-gadgetfile('Modelfiles/timevariableK.mat',
-           file_type = 'timevariable',
-           components = list(list('annualgrowth',
-                                  data= data_frame(year = rep(year_range, each=6), 
-                                                       step = rep(1:6, length(year_range)), 
-                                                       value = parse(text=sprintf(rep(c(rep('0.001*hadmat.k.%s',2), 
-                                                                                        rep('0.001*hadimm.k.%s',4)), 
-                                                                                      length(year_range)),rep(c(1,2,3,4,5,6), 
-                                                                                                             length(year_range)))) %>%
-                                                         map(to.gadget.formulae)%>% 
-                                                         unlist()))
-                                  )) %>% 
-  write.gadget.file(gd$dir)
-
-gadgetfile('Modelfiles/timevariableK.imm',
-           file_type = 'timevariable',
-           components = list(list('annualgrowth',
-                                  data= data_frame(year = rep(year_range, each=6), 
-                                                   step = rep(1:6, length(year_range)), 
-                                                   value = parse(text=sprintf('0.001*hadimm.k.%s',rep(c(1,2,3,4,5,6), length(year_range)))) %>%
-                                                     map(to.gadget.formulae)%>% 
-                                                     unlist()))
-           )) %>% 
-  write.gadget.file(gd$dir)
-
-gadgetfile('Modelfiles/timevariableLinf',
-           file_type = 'timevariable',
-           components = list(list('annualgrowth',
-                                  data= data_frame(year = rep(year_range, each=4), 
-                                                   step = rep(1:4, length(year_range)), 
-                                                   value = parse(text=sprintf('had.Linf.%s',rep(c(41,23,23,41), length(year_range)))) %>%
-                                                     map(to.gadget.formulae)%>% 
-                                                     unlist()))
-           )) %>% 
-  write.gadget.file(gd$dir)
 
 ## Write out areafile and update mainfile with areafile location
 gadget_areafile(
@@ -96,12 +70,15 @@ gadget_dir_write(gd,.)
 source('../R/utils.R')
 source('00-setup/setup-fleets.R')
 source('00-setup/setup-model.R')
+#fix M parameters in stock files here
 source('00-setup/setup-catchdistribution.R')
 source('00-setup/setup-indices.R')
 source('00-setup/setup-likelihood.R')
 
 Sys.setenv(GADGET_WORKING_DIR=normalizePath(gd$dir))
 callGadget(l=1,i='params.in',p='params.init')
+
+#fix M values in params.init file
 
 if(FALSE){
   source('00-setup/setup-fixed_slope.R')

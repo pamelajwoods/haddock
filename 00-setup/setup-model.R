@@ -87,7 +87,7 @@ had.imm <-
                 transitionstep = 6) %>% 
   gadget_update('doesrenew',
                 normalparam = data_frame(year = year_range,
-                                         step = 3, #changed this so new recruits should not be detected in spring survey
+                                         step = 4, #changed this so new recruits should not be detected in spring survey
                                          area = 1,
                                          age = .[[1]]$minage,
                                          number = parse(text=sprintf('had.rec.scalar*exp(had.rec.%s)',year)) %>% 
@@ -108,14 +108,14 @@ had.mat <-
   gadgetstock('hadmat',gd$dir,missingOkay = TRUE) %>%
   gadget_update('stock',
                 minage = 1,
-                maxage = 10,
+                maxage = 15,
                 minlength = 1,
                 maxlength = 100,
                 dl = 1,
                 livesonareas = 1) %>%
   gadget_update('doesgrow', ## note to self the order of these parameters make difference
                 growthparameters=c(linf='#had.Linf', 
-                                   k='Modelfiles/timevariableK.imm',
+                                   k='Modelfiles/timevariableK.mat',
                                    alpha = '#hadmat.walpha',
                                    beta = '#hadmat.wbeta'),
                 beta = to.gadget.formulae(quote(10*hadmat.bbin)),
@@ -148,29 +148,48 @@ had.mat %>%
 
 
 
+
 Sys.setenv(GADGET_WORKING_DIR=normalizePath(gd$dir))
 callGadget(s=1,log = 'init.log') #ignore.stderr = FALSE,
 
 ## update the input parameters with sane initial guesses
 read.gadget.parameters(sprintf('%s/params.out',gd$dir)) %>% 
-  init_guess('rec.[0-9]',2,0,7,1) %>%
+  init_guess('rec.[0-9]',2,0,10,1) %>%
   init_guess('init.[0-9]',1,0.001,1000,1) %>%
-  init_guess('recl',5,3,7.5,1) %>% 
+  init_guess('recl',11,10,12,1) %>% 
   init_guess('rec.sd',2,0.1,3,1) %>% 
   init_guess('Linf',75, 65, 500,1) %>% 
   init_guess('k.[0-9]',100, 1, 500,1) %>% 
   init_guess('bbin',6, 1e-08, 100, 1) %>% 
-  init_guess('alpha', 0.5,  0.01, 3, 1) %>% 
-  init_guess('l50',45,10,100,1) %>% 
+  init_guess('alpha.[0-9]', 0.5,  0.01, 3, 1) %>% 
+  init_guess('l50.[0-9]',45,10,100,1) %>% 
   init_guess('walpha',lw.constants$estimate[1], 1e-10, 1,0) %>% 
   init_guess('wbeta',lw.constants$estimate[2], 2, 4,0) %>% 
   init_guess('M$',0.2,0.001,1,0) %>% 
-  init_guess('M0',0.35,0.001,1,0) %>% 
+  init_guess('M00',0.55,0.001,1,0) %>% 
+  init_guess('M01',0.45,0.001,1,0) %>% 
+  init_guess('M04',0.23,0.001,1,0) %>% 
+  init_guess('M05',0.25,0.001,1,0) %>% 
+  init_guess('M06',0.27,0.001,1,0) %>% 
+  init_guess('M07',0.3,0.001,1,0) %>% 
+  init_guess('M08',0.33,0.001,1,0) %>% 
+  init_guess('M09',0.36,0.001,1,0) %>% 
+  init_guess('M10',0.4,0.001,1,0) %>% 
+  init_guess('M11',0.44,0.001,1,0) %>% 
+  init_guess('M13',0.49,0.001,1,0) %>% 
+  init_guess('M13',0.54,0.001,1,0) %>% 
+  init_guess('M14',0.59,0.001,1,0) %>% 
+  init_guess('M15',0.65,0.001,1,0) %>% 
   init_guess('rec.scalar',1,1,500,1) %>% 
   init_guess('init.scalar',1,0.1,300,1) %>% 
   init_guess('mat2',mat.l50$l50,0.75*mat.l50$l50,1.25*mat.l50$l50,1) %>% 
   init_guess('mat1',35,  10, 200, 1) %>% 
-  init_guess('init.F',0.5,0.1,1.5,1) %>% 
+  init_guess('init.F',0.4,0.1,1.5,1) %>% 
+  init_guess('p0.[0-9]',0,0,1,1) %>% 
+  init_guess('p2.[0-9]',1,0,1,1) %>% 
+  init_guess('p3.[0-9]',1,0.01,100,1) %>% 
+  init_guess('p4.[0-9]',1,0.01,100,1) %>% 
+  init_guess('mode.[0-9]',45,20,70,1) %>% 
   init_guess('p0',0,0,1,1) %>% 
   init_guess('p2',1,0,1,1) %>% 
   init_guess('p3',1,0.01,100,1) %>% 

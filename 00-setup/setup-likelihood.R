@@ -2,9 +2,12 @@
 
 ## weird inconsistencies in Gadget
 ## time step 2 is used instead of time step 1 for catch distribution data rather than survey indices, because survey indices are compared in first quarter but consumption compared in second quarter
-aldist.igfs[[1]]$step <- 2
-ldist.igfs[[1]]$step <- 2
-matp.igfs[[1]]$step <- 2
+aldist.igfs_e[[1]]$step <- 2
+ldist.igfs_e[[1]]$step <- 2
+matp.igfs_e[[1]]$step <- 2
+aldist.igfs_l[[1]]$step <- 2
+ldist.igfs_l[[1]]$step <- 2
+matp.igfs_l[[1]]$step <- 2
 
 aut.SI1[[1]]$step <- 5
 aut.SI2[[1]]$step <- 5
@@ -28,7 +31,8 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
   gadget_update("understocking",
                 name = "understocking",
                 weight = "100") %>% 
-  
+  ### Catch distributions
+  # Autumn
   gadget_update("catchdistribution",
                 name = "ldist.aut",
                 weight = 1,
@@ -41,84 +45,206 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 data = aldist.aut[[1]], 
                 fleetnames = c("aut"),
                 stocknames =stock_names) %>% 
+  #Spring
   gadget_update("catchdistribution",
-                name = "ldist.igfs",
+                name = "ldist.igfs_e",
                 weight = 1,
-                data = ldist.igfs[[1]],
-                fleetnames = c("igfs"),
+                data = ldist.igfs_e[[1]],
+                fleetnames = c("igfs_e"),
                 stocknames =stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "aldist.igfs",
+                name = "ldist.igfs_l",
                 weight = 1,
-                data = aldist.igfs[[1]],
-                fleetnames = c("igfs"),
+                data = ldist.igfs_l[[1]],
+                fleetnames = c("igfs_l"),
                 stocknames =stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "ldist.lln",
+                name = "aldist.igfs_e",
                 weight = 1,
-                data = ldist.lln[[1]], #%>% ## tow == 60228 was wrongly assigned, omit samples from that quarter
+                data = aldist.igfs_e[[1]],
+                fleetnames = c("igfs_e"),
+                stocknames =stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.igfs_l",
+                weight = 1,
+                data = aldist.igfs_l[[1]],
+                fleetnames = c("igfs_l"),
+                stocknames =stock_names) %>% 
+  #Long line
+  gadget_update("catchdistribution",
+                name = "ldist.lln_e",
+                weight = 1,
+                data = ldist.lln_e[[1]], #%>% ## tow == 60228 was wrongly assigned, omit samples from that quarter
                   #filter(!(year==1993&step==4)),
-                fleetnames = c("lln"),
+                fleetnames = c("lln_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "aldist.lln",
+                name = "ldist.lln_l",
                 weight = 1,
-                data = aldist.lln[[1]], #%>%  ## only 20 fish aged taken in those quarters
+                data = ldist.lln_l[[1]], #%>% ## tow == 60228 was wrongly assigned, omit samples from that quarter
+                #filter(!(year==1993&step==4)),
+                fleetnames = c("lln_l"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.lln_e",
+                weight = 1,
+                data = aldist.lln_e[[1]], #%>%  ## only 20 fish aged taken in those quarters
                   #filter(year>1998,!((year==2002|year==2003)&step==2)),
-                fleetnames = c("lln"),
+                fleetnames = c("lln_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "ldist.gil",
+                name = "aldist.lln_l",
                 weight = 1,
-                data = ldist.gil[[1]], #%>% ## only one fish lengthmeasured
+                data = aldist.lln_l[[1]], #%>%  ## only 20 fish aged taken in those quarters
+                #filter(year>1998,!((year==2002|year==2003)&step==2)),
+                fleetnames = c("lln_l"),
+                stocknames = stock_names) %>% 
+  #Gill nets
+  gadget_update("catchdistribution",
+                name = "ldist.gil_e",
+                weight = 1,
+                data = ldist.gil_e[[1]], #%>% ## only one fish lengthmeasured
                   #filter(!(year==2005&step==2)),
-                fleetnames = c("gil"),
+                fleetnames = c("gil_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "aldist.gil",
+                name = "ldist.gil_l",
                 weight = 1,
-                data = aldist.gil[[1]], #%>% 
+                data = ldist.gil_l[[1]], #%>% ## only one fish lengthmeasured
+                #filter(!(year==2005&step==2)),
+                fleetnames = c("gil_l"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.gil_e",
+                weight = 1,
+                data = aldist.gil_e[[1]], #%>% 
                   #filter(year>1998),
-                fleetnames = c("gil"),
+                fleetnames = c("gil_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "ldist.bmt",
+                name = "aldist.gil_l",
                 weight = 1,
-                data = ldist.bmt[[1]], #%>% ## to few samples (<=20 fish lengths)
+                data = aldist.gil_l[[1]], #%>% 
+                #filter(year>1998),
+                fleetnames = c("gil_l"),
+                stocknames = stock_names) %>%
+  #Bottom trawls
+  gadget_update("catchdistribution",
+                name = "ldist.bmt_e",
+                weight = 1,
+                data = ldist.bmt_e[[1]], #%>% ## to few samples (<=20 fish lengths)
                   # filter(!(year==1982&step==4),
                   #        !(year==1984&step==1),
                   #        !(year==1992&step==4),
                   #        !(year==1994&step==1),
                   #        !(year==1998&step==3),
                   #        !(year==1989&step==3)),
-                fleetnames = c("bmt"),
+                fleetnames = c("bmt_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "aldist.bmt",
+                name = "ldist.bmt_l",
                 weight = 1,
-                data = aldist.bmt[[1]], #%>% 
+                data = ldist.bmt_l[[1]], #%>% ## to few samples (<=20 fish lengths)
+                # filter(!(year==1982&step==4),
+                #        !(year==1984&step==1),
+                #        !(year==1992&step==4),
+                #        !(year==1994&step==1),
+                #        !(year==1998&step==3),
+                #        !(year==1989&step==3)),
+                fleetnames = c("bmt_l"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.bmt_e",
+                weight = 1,
+                data = aldist.bmt_e[[1]], #%>% 
                   #filter(year>1998),
-                fleetnames = c("bmt"),
+                fleetnames = c("bmt_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "ldist.dse",
+                name = "aldist.bmt_l",
                 weight = 1,
-                data = ldist.dse[[1]], 
-                fleetnames = c("dse"),
+                data = aldist.bmt_l[[1]], #%>% 
+                #filter(year>1998),
+                fleetnames = c("bmt_l"),
+                stocknames = stock_names) %>% 
+  #Other trawls
+  gadget_update("catchdistribution",
+                name = "ldist.ott_e",
+                weight = 1,
+                data = ldist.ott_e[[1]], #%>% ## to few samples (<=20 fish lengths)
+                # filter(!(year==1982&step==4),
+                #        !(year==1984&step==1),
+                #        !(year==1992&step==4),
+                #        !(year==1994&step==1),
+                #        !(year==1998&step==3),
+                #        !(year==1989&step==3)),
+                fleetnames = c("ott_e"),
                 stocknames = stock_names) %>% 
   gadget_update("catchdistribution",
-                name = "aldist.dse",
+                name = "ldist.ott_l",
                 weight = 1,
-                data = aldist.dse[[1]], 
-                fleetnames = c("dse"),
+                data = ldist.ott_l[[1]], #%>% ## to few samples (<=20 fish lengths)
+                # filter(!(year==1982&step==4),
+                #        !(year==1984&step==1),
+                #        !(year==1992&step==4),
+                #        !(year==1994&step==1),
+                #        !(year==1998&step==3),
+                #        !(year==1989&step==3)),
+                fleetnames = c("ott_l"),
                 stocknames = stock_names) %>% 
-  
+  gadget_update("catchdistribution",
+                name = "aldist.ott_e",
+                weight = 1,
+                data = aldist.ott_e[[1]], #%>% 
+                #filter(year>1998),
+                fleetnames = c("ott_e"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.ott_l",
+                weight = 1,
+                data = aldist.ott_l[[1]], #%>% 
+                #filter(year>1998),
+                fleetnames = c("ott_l"),
+                stocknames = stock_names) %>% 
+  #Danish and other seines
+  gadget_update("catchdistribution",
+                name = "ldist.dse_e",
+                weight = 1,
+                data = ldist.dse_e[[1]], 
+                fleetnames = c("dse_e"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "ldist.dse_l",
+                weight = 1,
+                data = ldist.dse_l[[1]], 
+                fleetnames = c("dse_l"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.dse_e",
+                weight = 1,
+                data = aldist.dse_e[[1]], 
+                fleetnames = c("dse_e"),
+                stocknames = stock_names) %>% 
+  gadget_update("catchdistribution",
+                name = "aldist.dse_l",
+                weight = 1,
+                data = aldist.dse_l[[1]], 
+                fleetnames = c("dse_l"),
+                stocknames = stock_names) %>% 
+  #Maturity data
   gadget_update("stockdistribution",
-                name = "matp.igfs",
+                name = "matp.igfs_e",
                 weight = 1,
-                data = matp.igfs[[1]], # %>% ## maturity @ length in 1985 appears to be silly and only one sample in 1989
+                data = matp.igfs_e[[1]], # %>% ## maturity @ length in 1985 appears to be silly and only one sample in 1989
                   #filter(year>1989),
-                fleetnames = c("igfs"),
+                fleetnames = c("igfs_e"),
+                stocknames =stock_names) %>% 
+  gadget_update("stockdistribution",
+                name = "matp.igfs_l",
+                weight = 1,
+                data = matp.igfs_l[[1]], # %>% ## maturity @ length in 1985 appears to be silly and only one sample in 1989
+                #filter(year>1989),
+                fleetnames = c("igfs_l"),
                 stocknames =stock_names) %>% 
   gadget_update("stockdistribution",
                 name = "matp.aut",
@@ -126,6 +252,7 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 data = matp.aut[[1]], 
                 fleetnames = c("aut"),
                 stocknames =stock_names) %>% 
+  ### Survey Indices ###
   #survey indices are renamed according to AUTUMN intervals just because numbers were rounder. 
   #For example, si.i.10_15 actually has an interval 13 - 18 because its from the IGFS survey, 
   #whereas si.a.10_15 actually has interval 10-15.
@@ -159,8 +286,8 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.i.36_45",
                 weight = 1,
                 data = igfs.SI5[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.i.45_55",
@@ -207,8 +334,8 @@ gadgetlikelihood('likelihood',gd$dir,missingOkay = TRUE) %>%
                 name = "si.a.36_45",
                 weight = 1,
                 data = aut.SI5[[1]],
-                fittype = 'loglinearfit', #'fixedslopeloglinearfit',
-                #slope=1,
+                fittype = 'fixedslopeloglinearfit',
+                slope=1,
                 stocknames = stock_names) %>% 
   gadget_update("surveyindices",
                 name = "si.a.45_55",
